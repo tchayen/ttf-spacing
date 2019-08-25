@@ -1,4 +1,4 @@
-import { Dictionary, Uint16 } from './types';
+import { Dictionary, Uint16, Mapping } from './types';
 import {
   Name,
   Cmap,
@@ -127,9 +127,11 @@ const readNameTable = (reader: FontFileReader, offset: number): Name => {
   return name;
 };
 
+type ParseFormat4Output = Format4 & { glyphIndexMap: Mapping<number> };
+
 // https://docs.microsoft.com/en-us/typography/opentype/spec/cmap#format-4-segment-mapping-to-delta-values
-const parseFormat4 = (reader: FontFileReader): Format4 => {
-  const format4: Format4 = {
+const parseFormat4 = (reader: FontFileReader): ParseFormat4Output => {
+  const format4: ParseFormat4Output = {
     format: 4,
     length: reader.getUint16(),
     language: reader.getUint16(),
@@ -199,15 +201,21 @@ const parseFormat4 = (reader: FontFileReader): Format4 => {
   return format4;
 };
 
+type ReadCmapTableOutput = Cmap & { glyphIndexMap: Mapping<number> };
+
 // https://docs.microsoft.com/en-us/typography/opentype/spec/cmap
-const readCmapTable = (reader: FontFileReader, offset: number): Cmap => {
+const readCmapTable = (
+  reader: FontFileReader,
+  offset: number,
+): ReadCmapTableOutput => {
   const old = reader.getPosition();
   reader.setPosition(offset);
 
-  const cmap: Cmap = {
+  const cmap: ReadCmapTableOutput = {
     version: reader.getUint16(),
     numTables: reader.getUint16(),
     encodingRecords: [],
+    glyphIndexMap: {},
   };
 
   if (cmap.version !== 0) {
@@ -252,7 +260,7 @@ const readCmapTable = (reader: FontFileReader, offset: number): Cmap => {
   reader.setPosition(offset + selectedOffset);
   const format = reader.getUint16();
   if (format === 4) {
-    const f4 = parseFormat4(reader);
+    cmap.glyphIndexMap = parseFormat4(reader).glyphIndexMap;
   } else {
     throw new Error(`Unsupported format: ${format}. Required: 4.`);
   }
@@ -385,7 +393,10 @@ const ttfReader = (reader: FontFileReader): TtfReader => {
 
   const head = readHeadTable(reader, tables['head'].offset);
   const name = readNameTable(reader, tables['name'].offset);
-  const cmap = readCmapTable(reader, tables['cmap'].offset);
+  const { glyphIndexMap, ...cmap } = readCmapTable(
+    reader,
+    tables['cmap'].offset,
+  );
   const maxp = readMaxpTable(reader, tables['maxp'].offset);
   const hhea = readHheaTable(reader, tables['hhea'].offset);
   const hmtx = readHmtxTable(
@@ -403,6 +414,7 @@ const ttfReader = (reader: FontFileReader): TtfReader => {
     maxp,
     hhea,
     hmtx,
+    glyphIndexMap,
   };
 };
 

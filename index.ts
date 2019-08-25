@@ -1,5 +1,5 @@
 import fs from 'fs';
-import fontFileReader, { FontFileReader } from './fontFileReader';
+import fontFileReader from './fontFileReader';
 import ttfReader from './ttfReader';
 
 const readFile = (fileName: string): Promise<Buffer> =>
@@ -18,5 +18,10 @@ const readFile = (fileName: string): Promise<Buffer> =>
   const reader = fontFileReader(buffer);
   const ttf = ttfReader(reader);
 
-  console.log(JSON.stringify(ttf, null, 4));
+  const charToGlyphIndex = (char: string) =>
+    ttf.glyphIndexMap[char.codePointAt(0) || 0] || 0;
+
+  console.log(ttf.hmtx.hMetrics[charToGlyphIndex('w')]);
+  console.log(ttf.hmtx.hMetrics[charToGlyphIndex('a')]);
+  // console.log(JSON.stringify(ttf, null, 4));
 })();

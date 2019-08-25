@@ -86,7 +86,6 @@ export type Format4 = {
   startCode: Array<Uint16>;
   idDelta: Array<Int16>;
   idRangeOffset: Array<Uint16>;
-  glyphIndexMap: Mapping<number>;
 };
 
 export type Cmap = {
@@ -151,4 +150,5 @@ export type TtfReader = {
   maxp: Maxp;
   hhea: Hhea;
   hmtx: Hmtx;
+  glyphIndexMap: Mapping<number>;
 };
