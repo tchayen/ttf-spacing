@@ -7,6 +7,7 @@ import {
   FWord,
   Fixed,
   UFWord,
+  F2Dot14,
 } from './types';
 
 export type FontFileReader = {
@@ -17,7 +18,7 @@ export type FontFileReader = {
   getInt32: () => Int32;
   getFWord: () => FWord;
   getUFWord: () => UFWord;
-  get2Dot14: () => number;
+  getF2Dot14: () => F2Dot14;
   getFixed: () => Fixed;
   getString: (length: number) => string;
   getDate: () => Date;
@@ -46,7 +47,7 @@ const fontFileReader = (buffer: Buffer): FontFileReader => {
 
   const getUFWord = getUint16;
 
-  const get2Dot14 = () => getInt16() / (1 << 14);
+  const getF2Dot14 = () => getInt16() / (1 << 14);
 
   const getFixed = () => getInt32() / (1 << 16);
 
@@ -75,7 +76,7 @@ const fontFileReader = (buffer: Buffer): FontFileReader => {
     getInt32,
     getFWord,
     getUFWord,
-    get2Dot14,
+    getF2Dot14,
     getFixed,
     getString,
     getDate,

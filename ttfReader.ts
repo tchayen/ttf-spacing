@@ -233,11 +233,11 @@ const readCmapTable = (
   let selectedOffset = -1;
   for (let i = 0; i < cmap.numTables; i++) {
     const { platformID, encodingID, offset } = cmap.encodingRecords[i];
-    const windowsPlatform =
+    const isWindowsPlatform =
       platformID === 3 &&
       (encodingID === 0 || encodingID === 1 || encodingID === 10);
 
-    const unicodePlatform =
+    const isUnicodePlatform =
       platformID === 0 &&
       (encodingID === 0 ||
         encodingID === 1 ||
@@ -245,7 +245,7 @@ const readCmapTable = (
         encodingID === 3 ||
         encodingID === 4);
 
-    if (windowsPlatform || unicodePlatform) {
+    if (isWindowsPlatform || isUnicodePlatform) {
       selectedOffset = offset;
       break;
     }
