@@ -1,12 +1,24 @@
+import {
+  Uint8,
+  Uint16,
+  Uint32,
+  Int16,
+  Int32,
+  FWord,
+  Fixed,
+  UFWord,
+} from './types';
+
 export type FontFileReader = {
-  getUint8: () => number;
-  getUint16: () => number;
-  getUint32: () => number;
-  getInt16: () => number;
-  getInt32: () => number;
-  getFword: () => number;
+  getUint8: () => Uint8;
+  getUint16: () => Uint16;
+  getUint32: () => Uint32;
+  getInt16: () => Int16;
+  getInt32: () => Int32;
+  getFWord: () => FWord;
+  getUFWord: () => UFWord;
   get2Dot14: () => number;
-  getFixed: () => number;
+  getFixed: () => Fixed;
   getString: (length: number) => string;
   getDate: () => Date;
   getPosition: () => number;
@@ -30,7 +42,9 @@ const fontFileReader = (buffer: Buffer): FontFileReader => {
   const getInt32 = () =>
     (getUint8() << 24) | (getUint8() << 16) | (getUint8() << 8) | getUint8();
 
-  const getFword = getInt16;
+  const getFWord = getInt16;
+
+  const getUFWord = getUint16;
 
   const get2Dot14 = () => getInt16() / (1 << 14);
 
@@ -59,7 +73,8 @@ const fontFileReader = (buffer: Buffer): FontFileReader => {
     getUint32,
     getInt16,
     getInt32,
-    getFword,
+    getFWord,
+    getUFWord,
     get2Dot14,
     getFixed,
     getString,
