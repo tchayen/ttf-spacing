@@ -142,13 +142,27 @@ export type Hmtx = {
   leftSideBearing: Array<FWord>;
 };
 
+export type Loca = Array<Offset16> | Array<Offset32>;
+
+type GlyphHeader = {
+  numberOfContours: Int16;
+  xMin: Int16;
+  yMin: Int16;
+  xMax: Int16;
+  yMax: Int16;
+};
+
+export type Glyf = Array<GlyphHeader>;
+
 export type TtfReader = {
   tables: Dictionary<Table>;
   head: Head;
   name: Name;
   cmap: Cmap;
+  loca: Loca;
   maxp: Maxp;
   hhea: Hhea;
   hmtx: Hmtx;
+  glyf: Glyf;
   glyphIndexMap: Mapping<number>;
 };

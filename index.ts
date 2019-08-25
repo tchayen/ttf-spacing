@@ -23,5 +23,23 @@ const readFile = (fileName: string): Promise<Buffer> =>
 
   console.log(ttf.hmtx.hMetrics[charToGlyphIndex('w')]);
   console.log(ttf.hmtx.hMetrics[charToGlyphIndex('a')]);
-  // console.log(JSON.stringify(ttf, null, 4));
+  console.log(ttf.glyf);
+
+  console.log(
+    [
+      ttf.glyf[charToGlyphIndex('w')],
+      ttf.glyf[charToGlyphIndex('a')],
+      ttf.glyf[charToGlyphIndex('f')],
+    ].map((glyf, index) => {
+      const hmtx = ttf.hmtx.hMetrics[index];
+      return {
+        x: glyf.xMin,
+        y: glyf.yMin,
+        width: glyf.xMax,
+        height: glyf.yMax,
+        left: hmtx.leftSideBearing,
+        right: hmtx.advanceWidth - glyf.xMax,
+      };
+    }),
+  );
 })();

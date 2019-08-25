@@ -9,6 +9,8 @@ import {
   Table,
   Head,
   Format4,
+  Glyf,
+  Loca,
 } from './ttf';
 import { FontFileReader } from './fontFileReader';
 
@@ -361,6 +363,61 @@ const readHmtxTable = (
   return hmtx;
 };
 
+// https://docs.microsoft.com/en-us/typography/opentype/spec/loca
+const readLocaTable = (
+  reader: FontFileReader,
+  offset: number,
+  numGlyphs: number,
+  indexToLocFormat: number,
+) => {
+  const old = reader.getPosition();
+  reader.setPosition(offset);
+
+  const getter =
+    indexToLocFormat === 0 ? reader.getOffset16 : reader.getOffset32;
+
+  const loca: Loca = [];
+  for (let i = 0; i < numGlyphs + 1; i++) {
+    loca.push(getter());
+  }
+
+  reader.setPosition(old);
+
+  return loca;
+};
+
+// https://docs.microsoft.com/en-us/typography/opentype/spec/glyf
+const readGlyfTable = (
+  reader: FontFileReader,
+  offset: number,
+  loca: Loca,
+  indexToLocFormat: number,
+) => {
+  const old = reader.getPosition();
+  reader.setPosition(offset);
+
+  const glyf: Glyf = [];
+
+  for (let i = 0; i < loca.length - 1; i++) {
+    const multiplier = indexToLocFormat === 0 ? 2 : 1;
+    const locaOffset = loca[i] * multiplier;
+
+    reader.setPosition(offset + locaOffset);
+
+    glyf.push({
+      numberOfContours: reader.getInt16(),
+      xMin: reader.getInt16(),
+      yMin: reader.getInt16(),
+      xMax: reader.getInt16(),
+      yMax: reader.getInt16(),
+    });
+  }
+
+  reader.setPosition(old);
+
+  return glyf;
+};
+
 const ttfReader = (reader: FontFileReader): TtfReader => {
   reader.getUint32(); // scalarType
   const numTables = reader.getUint16();
@@ -398,12 +455,24 @@ const ttfReader = (reader: FontFileReader): TtfReader => {
     tables['cmap'].offset,
   );
   const maxp = readMaxpTable(reader, tables['maxp'].offset);
+  const loca = readLocaTable(
+    reader,
+    tables['loca'].offset,
+    maxp.numGlyphs,
+    head.indexToLocFormat,
+  );
   const hhea = readHheaTable(reader, tables['hhea'].offset);
   const hmtx = readHmtxTable(
     reader,
     tables['hmtx'].offset,
     maxp.numGlyphs,
     hhea.numOfLongHorMetrics,
+  );
+  const glyf = readGlyfTable(
+    reader,
+    tables['glyf'].offset,
+    loca,
+    head.indexToLocFormat,
   );
 
   return {
@@ -412,8 +481,10 @@ const ttfReader = (reader: FontFileReader): TtfReader => {
     name,
     cmap,
     maxp,
+    loca,
     hhea,
     hmtx,
+    glyf,
     glyphIndexMap,
   };
 };
