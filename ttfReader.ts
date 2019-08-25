@@ -7,6 +7,7 @@ import {
   Int16,
   UFWord,
   Offset32,
+  Offset16,
 } from './types';
 import { FontFileReader } from './fontFileReader';
 
@@ -36,6 +37,36 @@ type Head = {
   indexToLocFormat: Int16;
   glyphDataFormat: Int16;
 };
+
+type NameRecord = {
+  platformID: Uint16;
+  encodingID: Uint16;
+  languageID: Uint16;
+  nameID: Uint16;
+  length: Uint16;
+  offset: Offset16;
+};
+
+type LangTagRecord = {
+  length: Uint16;
+  offset: Offset16;
+};
+
+type Name =
+  | {
+      format: 0;
+      count: Uint16;
+      stringOffset: Offset16;
+      nameRecord: Array<NameRecord>;
+    }
+  | {
+      format: 1;
+      count: Uint16;
+      stringOffset: Offset16;
+      nameRecord: Array<NameRecord>;
+      langTagCount: Uint16;
+      langTagRecord: Array<LangTagRecord>;
+    };
 
 type EncodingRecord = {
   platformID: Uint16;
@@ -100,6 +131,7 @@ type Hmtx = {
 type TtfReader = {
   tables: Dictionary<Table>;
   head: Head;
+  name: Name;
   cmap: Cmap;
   maxp: Maxp;
   hhea: Hhea;
@@ -175,6 +207,68 @@ const readHeadTable = (reader: FontFileReader, offset: number): Head => {
   }
 
   return head;
+};
+
+const readNameTable = (reader: FontFileReader, offset: number): Name => {
+  const old = reader.getPosition();
+  reader.setPosition(offset);
+
+  const format = reader.getUint16();
+  let name: Name;
+  if (format === 0) {
+    name = {
+      format: 0,
+      count: reader.getUint16(),
+      stringOffset: reader.getUint16(),
+      nameRecord: [],
+    };
+
+    for (let i = 0; i < name.count; i++) {
+      name.nameRecord.push({
+        platformID: reader.getUint16(),
+        encodingID: reader.getUint16(),
+        languageID: reader.getUint16(),
+        nameID: reader.getUint16(),
+        length: reader.getUint16(),
+        offset: reader.getUint16(),
+      });
+    }
+  } else if (format === 1) {
+    let partialName: Partial<Name> = {
+      format: 1,
+      count: reader.getUint16(),
+      stringOffset: reader.getUint16(),
+      nameRecord: [],
+    };
+
+    for (let i = 0; i < partialName.count!; i++) {
+      partialName.nameRecord!.push({
+        platformID: reader.getUint16(),
+        encodingID: reader.getUint16(),
+        languageID: reader.getUint16(),
+        nameID: reader.getUint16(),
+        length: reader.getUint16(),
+        offset: reader.getUint16(),
+      });
+    }
+
+    partialName.langTagCount = reader.getUint16();
+    partialName.langTagRecord = [];
+
+    for (let i = 0; i < partialName.langTagCount; i++) {
+      partialName.langTagRecord.push({
+        length: reader.getUint16(),
+        offset: reader.getUint16(),
+      });
+    }
+    name = partialName as Name;
+  } else {
+    throw new Error('Incorrect format');
+  }
+
+  reader.setPosition(old);
+
+  return name;
 };
 
 // https://docs.microsoft.com/en-us/typography/opentype/spec/cmap
@@ -323,6 +417,7 @@ const ttfReader = (reader: FontFileReader): TtfReader => {
   }
 
   const head = readHeadTable(reader, tables['head'].offset);
+  const name = readNameTable(reader, tables['name'].offset);
   const cmap = readCmapTable(reader, tables['cmap'].offset);
   const maxp = readMaxpTable(reader, tables['maxp'].offset);
   const hhea = readHheaTable(reader, tables['hhea'].offset);
@@ -336,6 +431,7 @@ const ttfReader = (reader: FontFileReader): TtfReader => {
   return {
     tables,
     head,
+    name,
     cmap,
     maxp,
     hhea,

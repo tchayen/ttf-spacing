@@ -9,4 +9,5 @@ export type FWord = Int16;
 export type UFWord = Uint16;
 export type F2Dot14 = number;
 export type Fixed = number;
+export type Offset16 = Uint16;
 export type Offset32 = Uint32;
