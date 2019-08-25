@@ -1,4 +1,5 @@
 export type Dictionary<T> = { [key: string]: T };
+export type Mapping<T> = { [key: number]: T };
 
 export type Uint8 = number;
 export type Uint16 = number;

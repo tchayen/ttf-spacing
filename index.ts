@@ -18,5 +18,5 @@ const readFile = (fileName: string): Promise<Buffer> =>
   const reader = fontFileReader(buffer);
   const ttf = ttfReader(reader);
 
-  console.log(ttf, ttf.name.nameRecord, ttf.cmap.encodingRecords);
+  console.log(JSON.stringify(ttf, null, 4));
 })();

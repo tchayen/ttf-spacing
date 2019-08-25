@@ -1,15 +1,15 @@
+import { Dictionary, Uint16 } from './types';
 import {
-  Dictionary,
-  Fixed,
-  Uint32,
-  Uint16,
-  FWord,
-  Int16,
-  UFWord,
-  Offset32,
-  Offset16,
-} from './types';
-import { Name, Cmap, Maxp, Hhea, Hmtx, TtfReader, Table, Head } from './ttf';
+  Name,
+  Cmap,
+  Maxp,
+  Hhea,
+  Hmtx,
+  TtfReader,
+  Table,
+  Head,
+  Format4,
+} from './ttf';
 import { FontFileReader } from './fontFileReader';
 
 const calculateTableChecksum = (
@@ -27,25 +27,6 @@ const calculateTableChecksum = (
   }
   reader.setPosition(old);
   return sum;
-};
-
-const getGlyphOffset = (
-  reader: FontFileReader,
-  tables: Dictionary<Table>,
-  head: Head,
-  index: number,
-) => {
-  let offset;
-  const old = reader.getPosition();
-  if (head.indexToLocFormat === 1) {
-    reader.setPosition(tables['loca'].offset + index * 4);
-    offset = reader.getUint32();
-  } else {
-    reader.setPosition(tables['loca'].offset + index * 2);
-    offset = reader.getUint16() * 2;
-  }
-  reader.setPosition(old);
-  return offset + tables['glyf'].offset;
 };
 
 // https://docs.microsoft.com/en-us/typography/opentype/spec/head
@@ -83,6 +64,7 @@ const readHeadTable = (reader: FontFileReader, offset: number): Head => {
   return head;
 };
 
+// https://docs.microsoft.com/en-us/typography/opentype/spec/name
 const readNameTable = (reader: FontFileReader, offset: number): Name => {
   const old = reader.getPosition();
   reader.setPosition(offset);
@@ -145,6 +127,78 @@ const readNameTable = (reader: FontFileReader, offset: number): Name => {
   return name;
 };
 
+// https://docs.microsoft.com/en-us/typography/opentype/spec/cmap#format-4-segment-mapping-to-delta-values
+const parseFormat4 = (reader: FontFileReader): Format4 => {
+  const format4: Format4 = {
+    format: 4,
+    length: reader.getUint16(),
+    language: reader.getUint16(),
+    segCountX2: reader.getUint16(),
+    searchRange: reader.getUint16(),
+    entrySelector: reader.getUint16(),
+    rangeShift: reader.getUint16(),
+    endCode: [],
+    startCode: [],
+    idDelta: [],
+    idRangeOffset: [],
+    glyphIndexMap: {},
+  };
+
+  const segCount = format4.segCountX2 >> 1;
+
+  for (let i = 0; i < segCount; i++) {
+    format4.endCode.push(reader.getUint16());
+  }
+
+  reader.getUint16(); // reserved pad
+
+  for (let i = 0; i < segCount; i++) {
+    format4.startCode.push(reader.getUint16());
+  }
+
+  for (let i = 0; i < segCount; i++) {
+    format4.idDelta.push(reader.getInt16());
+  }
+
+  const idRangeOffsetsStart = reader.getPosition();
+
+  for (let i = 0; i < segCount; i++) {
+    format4.idRangeOffset.push(reader.getUint16());
+  }
+
+  for (let i = 0; i < segCount - 1; i++) {
+    let glyphIndex = 0;
+    const endCode = format4.endCode[i];
+    const startCode = format4.startCode[i];
+    const idDelta = format4.idDelta[i];
+    const idRangeOffset = format4.idRangeOffset[i];
+
+    for (let c = startCode; c < endCode; c++) {
+      if (idRangeOffset !== 0) {
+        const startCodeOffset = (c - startCode) * 2;
+        const currentRangeOffset = i * 2; // 2 because the numbers are 2 byte big.
+
+        let glyphIndexOffset =
+          idRangeOffsetsStart +
+          idRangeOffset +
+          currentRangeOffset +
+          startCodeOffset;
+
+        reader.setPosition(glyphIndexOffset);
+        glyphIndex = reader.getUint16();
+        if (glyphIndex !== 0) {
+          glyphIndex = (glyphIndex + idDelta) & 0xffff;
+        }
+      } else {
+        glyphIndex = (c + idDelta) & 0xffff;
+      }
+      format4.glyphIndexMap[c] = glyphIndex;
+    }
+  }
+
+  return format4;
+};
+
 // https://docs.microsoft.com/en-us/typography/opentype/spec/cmap
 const readCmapTable = (reader: FontFileReader, offset: number): Cmap => {
   const old = reader.getPosition();
@@ -156,12 +210,51 @@ const readCmapTable = (reader: FontFileReader, offset: number): Cmap => {
     encodingRecords: [],
   };
 
+  if (cmap.version !== 0) {
+    throw new Error(`cmap version should be 0 but is ${cmap.version}`);
+  }
+
   for (let i = 0; i < cmap.numTables; i++) {
     cmap.encodingRecords.push({
       platformID: reader.getUint16(),
       encodingID: reader.getUint16(),
       offset: reader.getUint32(),
     });
+  }
+
+  let selectedOffset = -1;
+  for (let i = 0; i < cmap.numTables; i++) {
+    const { platformID, encodingID, offset } = cmap.encodingRecords[i];
+    const windowsPlatform =
+      platformID === 3 &&
+      (encodingID === 0 || encodingID === 1 || encodingID === 10);
+
+    const unicodePlatform =
+      platformID === 0 &&
+      (encodingID === 0 ||
+        encodingID === 1 ||
+        encodingID === 2 ||
+        encodingID === 3 ||
+        encodingID === 4);
+
+    if (windowsPlatform || unicodePlatform) {
+      selectedOffset = offset;
+      break;
+    }
+  }
+
+  if (selectedOffset === -1) {
+    throw new Error(
+      "The font doesn't contain any recognized platform and encoding",
+    );
+  }
+
+  reader.setPosition(offset + selectedOffset);
+  const format = reader.getUint16();
+  if (format === 4) {
+    const f4 = parseFormat4(reader);
+  } else {
+    throw new Error(`Unsupported format: ${format}. Required: 4.`);
   }
 
   reader.setPosition(old);
@@ -261,11 +354,11 @@ const readHmtxTable = (
 };
 
 const ttfReader = (reader: FontFileReader): TtfReader => {
-  const scalarType = reader.getUint32();
+  reader.getUint32(); // scalarType
   const numTables = reader.getUint16();
-  const searchRange = reader.getUint16();
-  const entrySelector = reader.getUint16();
-  const rangeShift = reader.getUint16();
+  reader.getUint16(); // searchRange
+  reader.getUint16(); // entrySelector
+  reader.getUint16(); // rangeShift
 
   const tables: Dictionary<Table> = {};
 

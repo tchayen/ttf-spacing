@@ -1,5 +1,6 @@
 import {
   Dictionary,
+  Mapping,
   Fixed,
   Uint32,
   Uint16,
@@ -71,6 +72,21 @@ export type EncodingRecord = {
   platformID: Uint16;
   encodingID: Uint16;
   offset: Offset32;
+};
+
+export type Format4 = {
+  format: Uint16;
+  length: Uint16;
+  language: Uint16;
+  segCountX2: Uint16;
+  searchRange: Uint16;
+  entrySelector: Uint16;
+  rangeShift: Uint16;
+  endCode: Array<Uint16>;
+  startCode: Array<Uint16>;
+  idDelta: Array<Int16>;
+  idRangeOffset: Array<Uint16>;
+  glyphIndexMap: Mapping<number>;
 };
 
 export type Cmap = {
