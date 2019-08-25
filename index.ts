@@ -13,24 +13,36 @@ const readFile = (fileName: string): Promise<Buffer> =>
     });
   });
 
+const saveFile = (fileName: string, data: string) =>
+  new Promise((resolve, reject) => {
+    if (typeof data !== 'string') {
+      const error = new Error('Only strings can be written to file');
+      reject(error);
+    }
+
+    fs.writeFile(fileName, data, error => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve();
+    });
+  });
+
 (async () => {
   const buffer = await readFile('./Inter-Regular.ttf');
   const reader = fontFileReader(buffer);
   const ttf = ttfReader(reader);
 
+  await saveFile('./Inter-Regular.json', JSON.stringify(ttf));
+
   const charToGlyphIndex = (char: string) =>
     ttf.glyphIndexMap[char.codePointAt(0) || 0] || 0;
 
-  console.log(ttf.hmtx.hMetrics[charToGlyphIndex('w')]);
-  console.log(ttf.hmtx.hMetrics[charToGlyphIndex('a')]);
-  console.log(ttf.glyf);
-
-  console.log(
-    [
-      ttf.glyf[charToGlyphIndex('w')],
-      ttf.glyf[charToGlyphIndex('a')],
-      ttf.glyf[charToGlyphIndex('f')],
-    ].map((glyf, index) => {
+  const data = ['w', 'a', 'f']
+    .map(charToGlyphIndex)
+    .map(index => ttf.glyf[index])
+    .map((glyf, index) => {
       const hmtx = ttf.hmtx.hMetrics[index];
       return {
         x: glyf.xMin,
@@ -40,6 +52,7 @@ const readFile = (fileName: string): Promise<Buffer> =>
         left: hmtx.leftSideBearing,
         right: hmtx.advanceWidth - glyf.xMax,
       };
-    }),
-  );
+    });
+
+  console.log(data);
 })();

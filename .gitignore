@@ -1,2 +1,3 @@
 *.ttf
+*.json
 node_modules/
