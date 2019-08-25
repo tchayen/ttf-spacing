@@ -6,6 +6,7 @@ import {
   FWord,
   Int16,
   UFWord,
+  Offset32,
 } from './types';
 import { FontFileReader } from './fontFileReader';
 
@@ -36,8 +37,16 @@ type Head = {
   glyphDataFormat: Int16;
 };
 
+type EncodingRecord = {
+  platformID: Uint16;
+  encodingID: Uint16;
+  offset: Offset32;
+};
+
 type Cmap = {
   version: Uint16;
+  numTables: Uint16;
+  encodingRecords: Array<EncodingRecord>;
 };
 
 type Maxp = {
@@ -91,6 +100,7 @@ type Hmtx = {
 type TtfReader = {
   tables: Dictionary<Table>;
   head: Head;
+  cmap: Cmap;
   maxp: Maxp;
   hhea: Hhea;
   hmtx: Hmtx;
@@ -165,6 +175,30 @@ const readHeadTable = (reader: FontFileReader, offset: number): Head => {
   }
 
   return head;
+};
+
+// https://docs.microsoft.com/en-us/typography/opentype/spec/cmap
+const readCmapTable = (reader: FontFileReader, offset: number): Cmap => {
+  const old = reader.getPosition();
+  reader.setPosition(offset);
+
+  const cmap: Cmap = {
+    version: reader.getUint16(),
+    numTables: reader.getUint16(),
+    encodingRecords: [],
+  };
+
+  for (let i = 0; i < cmap.numTables; i++) {
+    cmap.encodingRecords.push({
+      platformID: reader.getUint16(),
+      encodingID: reader.getUint16(),
+      offset: reader.getUint32(),
+    });
+  }
+
+  reader.setPosition(old);
+
+  return cmap;
 };
 
 // https://docs.microsoft.com/en-us/typography/opentype/spec/maxp
@@ -289,6 +323,7 @@ const ttfReader = (reader: FontFileReader): TtfReader => {
   }
 
   const head = readHeadTable(reader, tables['head'].offset);
+  const cmap = readCmapTable(reader, tables['cmap'].offset);
   const maxp = readMaxpTable(reader, tables['maxp'].offset);
   const hhea = readHheaTable(reader, tables['hhea'].offset);
   const hmtx = readHmtxTable(
@@ -301,6 +336,7 @@ const ttfReader = (reader: FontFileReader): TtfReader => {
   return {
     tables,
     head,
+    cmap,
     maxp,
     hhea,
     hmtx,
