@@ -75,7 +75,7 @@ const readNameTable = (reader: FontFileReader, offset: number): Name => {
     name = {
       format: 0,
       count: reader.getUint16(),
-      stringOffset: reader.getUint16(),
+      stringOffset: reader.getOffset16(),
       nameRecord: [],
     };
 
@@ -86,7 +86,7 @@ const readNameTable = (reader: FontFileReader, offset: number): Name => {
         languageID: reader.getUint16(),
         nameID: reader.getUint16(),
         length: reader.getUint16(),
-        offset: reader.getUint16(),
+        offset: reader.getOffset16(),
       });
     }
   } else if (format === 1) {
@@ -104,7 +104,7 @@ const readNameTable = (reader: FontFileReader, offset: number): Name => {
         languageID: reader.getUint16(),
         nameID: reader.getUint16(),
         length: reader.getUint16(),
-        offset: reader.getUint16(),
+        offset: reader.getOffset16(),
       });
     }
 
@@ -114,7 +114,7 @@ const readNameTable = (reader: FontFileReader, offset: number): Name => {
     for (let i = 0; i < partialName.langTagCount; i++) {
       partialName.langTagRecord.push({
         length: reader.getUint16(),
-        offset: reader.getUint16(),
+        offset: reader.getOffset16(),
       });
     }
     name = partialName as Name;
@@ -226,7 +226,7 @@ const readCmapTable = (
     cmap.encodingRecords.push({
       platformID: reader.getUint16(),
       encodingID: reader.getUint16(),
-      offset: reader.getUint32(),
+      offset: reader.getOffset32(),
     });
   }
 
