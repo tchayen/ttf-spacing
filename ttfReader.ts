@@ -191,6 +191,7 @@ const parseFormat4 = (reader: FontFileReader): ParseFormat4Output => {
         reader.setPosition(glyphIndexOffset);
         glyphIndex = reader.getUint16();
         if (glyphIndex !== 0) {
+          // & 0xffff is modulo 65536.
           glyphIndex = (glyphIndex + idDelta) & 0xffff;
         }
       } else {
@@ -255,7 +256,7 @@ const readCmapTable = (
 
   if (selectedOffset === -1) {
     throw new Error(
-      "The font doesn't contain any recognized platform and encoding",
+      "The font doesn't contain any recognized platform and encoding.",
     );
   }
 
@@ -305,7 +306,7 @@ const readHheaTable = (reader: FontFileReader, offset: number): Hhea => {
   const old = reader.getPosition();
   reader.setPosition(offset);
 
-  const hhea = {
+  const hhea: Partial<Hhea> = {
     version: reader.getFixed(),
     ascent: reader.getFWord(),
     descent: reader.getFWord(),
@@ -317,17 +318,20 @@ const readHheaTable = (reader: FontFileReader, offset: number): Hhea => {
     caretSlopeRise: reader.getInt16(),
     caretSlopeRun: reader.getInt16(),
     caretOffset: reader.getFWord(),
-    reserved1: reader.getInt16(),
-    reserved2: reader.getInt16(),
-    reserved3: reader.getInt16(),
-    reserved4: reader.getInt16(),
-    metricDataFormat: reader.getInt16(),
-    numOfLongHorMetrics: reader.getUint16(),
   };
+
+  // Skip 4 reserved places.
+  reader.getInt16();
+  reader.getInt16();
+  reader.getInt16();
+  reader.getInt16();
+
+  hhea.metricDataFormat = reader.getInt16();
+  hhea.numOfLongHorMetrics = reader.getUint16();
 
   reader.setPosition(old);
 
-  return hhea;
+  return hhea as Hhea;
 };
 
 // https://docs.microsoft.com/en-us/typography/opentype/spec/hmtx

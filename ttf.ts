@@ -124,10 +124,6 @@ export type Hhea = {
   caretSlopeRise: Int16;
   caretSlopeRun: Int16;
   caretOffset: FWord;
-  reserved1: Int16;
-  reserved2: Int16;
-  reserved3: Int16;
-  reserved4: Int16;
   metricDataFormat: Int16;
   numOfLongHorMetrics: Uint16;
 };
