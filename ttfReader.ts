@@ -154,7 +154,7 @@ const parseFormat4 = (reader: FontFileReader): ParseFormat4Output => {
     format4.endCode.push(reader.getUint16());
   }
 
-  reader.getUint16(); // reserved pad
+  reader.getUint16(); // Reserved pad.
 
   for (let i = 0; i < segCount; i++) {
     format4.startCode.push(reader.getUint16());
