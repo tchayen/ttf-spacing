@@ -22,7 +22,7 @@
       }
 
       #text {
-        font-size: 32px;
+        font-size: 40px;
       }
 
       #props {
@@ -75,22 +75,36 @@
       document.getElementById('text').innerHTML = text;
 
       const screenWidth = 1100;
-      const screenHeight = 120;
+      const screenHeight = 80;
       const canvas = document.createElement('canvas');
       canvas.setAttribute(
         'style',
         `width: ${screenWidth}px; height: ${screenHeight}px`,
       );
-      canvas.width = screenWidth * 2;
-      canvas.height = screenHeight * 2;
+      canvas.width = screenWidth * window.devicePixelRatio;
+      canvas.height = screenHeight * window.devicePixelRatio;
       document.body.appendChild(canvas);
 
       setTimeout(() => {
         const context = canvas.getContext('2d');
-        const unitsPerEm = 500;
-        const fontSize = 24;
+        const fontSize = 40;
+
+        const unitsPerEm = 2816;
+
+        // https://docs.microsoft.com/en-us/typography/opentype/spec/ttch01
+        // https://www.w3.org/TR/css3-values/#absolute-lengths
+        // https://www.iamcal.com/misc/fonts/pixfonttut/
+
+        // const pointsPerInch = 72;
+        // const pixelsPerInch = 96;
+
+        // const points = (fontSize * pointsPerInch) / pixelsPerInch;
+
         const scale = (1 / unitsPerEm) * fontSize;
-        context.font = '136px Inter';
+        context.font = '40px Inter';
+
+        // Used to offset text a bit higher. Shouldn't be necessary.
+        const OFFSET = 30;
 
         let positionX = 0;
         for (let i = 0; i < shapes.length; i++) {
