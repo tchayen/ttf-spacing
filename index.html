@@ -17,7 +17,7 @@
       canvas {
         width: 100vw;
         height: 100vh;
-        background-color: #000;
+        background-color: #999;
         margin: 20px 0;
       }
 
@@ -121,7 +121,7 @@
 
           if (text[i] !== ' ') {
             context.beginPath();
-            context.fillStyle = 'rgba(255, 0, 255, 0.8)';
+            context.fillStyle = 'rgb(255, 255, 255)';
             context.rect(
               positionX + (x + lsb) * scale,
               screenHeight - (y + height) * scale - OFFSET,
@@ -130,11 +130,11 @@
             );
             context.fill();
 
-            context.fillStyle = 'rgb(0, 255, 255)';
+            context.fillStyle = 'rgba(0, 0, 0, 0.85)';
             context.fillText(
               text[i],
               positionX + x * scale,
-              screenHeight - y * scale - OFFSET,
+              screenHeight - OFFSET,
             );
           }
 
