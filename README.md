@@ -1,25 +1,35 @@
-`GDEF` – provides various glyph properties used in OpenType Layout processing
+# ttf-boundaries
 
-`GPOS` – provides precise control over glyph placement for sophisticated text layout and rendering in each script and language system that a font supports
+`*.ttf` files parser. Returns json with decoded tables.
 
-`GSUB` – provides data for substition of glyphs for appropriate rendering of scripts, such as cursively-connecting forms in Arabic script, or for advanced typographic effects, such as ligatures
+And additionally contains `glyphIndexMap` object, which is dictionary mapping utf-8 char to `glyphIndex` which is used in other tables such as `loca` or `hmtx`.
 
-`OS/2` – consists of a set of metrics that are required by and Windows
+## Usage
 
-`cmap` – maps character codes to glyph indices
+```js
+import ttfBoundaries from 'ttf-boundaries';
+// ...
+const font = await ttfBoundaries('Inter-Regular.ttf');
+```
 
-`glyf` – contains the data that defines the appearance of the glyphs in the font
+## Install
 
-`head` – contains global information about the font
+```bash
+yarn add ttf-boundaries
+```
 
-`hhea` – contains information needed to layout fonts whose characters are written horizontally, that is, either left to right or right to left
+## Docs
 
-`hmtx` – contains metric information for the horizontal layout each of the glyphs in the font
+Library handles following tables:
 
-`loca` – stores the offsets to the locations of the glyphs in the font relative to the beginning of the `glyf` table
+- tables
+- head
+- name
+- cmap
+- maxp
+- loca
+- hhea
+- hmtx
+- glyf
 
-`maxp` – establishes the memory requirements for a font
-
-`name` – allows you to include human-readable names for features and settings, copyright notices, font names, style names, and other information related to your font
-
-`post` – contains information needed to use a TrueType font on a PostScript printer
+For exact types, consult `types.ts`.
