@@ -22,7 +22,7 @@
       }
 
       #text {
-        font-size: 40px;
+        font-size: 32px;
       }
 
       #props {
@@ -74,6 +74,13 @@
       const text = 'hrumpy wizards make toxic brew';
       document.getElementById('text').innerHTML = text;
 
+      const getFontSize = () => {
+        const textElement = getComputedStyle(document.getElementById('text'));
+        const fontSizeWithPx = textElement.fontSize;
+        const fontSize = fontSizeWithPx.slice(0, -2) * window.devicePixelRatio;
+        return fontSize;
+      };
+
       const screenWidth = 1100;
       const screenHeight = 80;
       const canvas = document.createElement('canvas');
@@ -87,8 +94,7 @@
 
       setTimeout(() => {
         const context = canvas.getContext('2d');
-        const fontSize = 40;
-
+        const fontSize = getFontSize();
         const unitsPerEm = 2816;
 
         // https://docs.microsoft.com/en-us/typography/opentype/spec/ttch01
@@ -101,10 +107,10 @@
         // const points = (fontSize * pointsPerInch) / pixelsPerInch;
 
         const scale = (1 / unitsPerEm) * fontSize;
-        context.font = '40px Inter';
+        context.font = `${fontSize}px Inter`;
 
         // Used to offset text a bit higher. Shouldn't be necessary.
-        const OFFSET = 30;
+        const OFFSET = 10;
 
         let positionX = 0;
         for (let i = 0; i < shapes.length; i++) {
@@ -119,7 +125,7 @@
             context.fillStyle = 'rgba(255, 0, 255, 0.8)';
             context.rect(
               positionX + (x + lsb) * scale,
-              screenHeight - (y + height) * scale,
+              screenHeight - (y + height) * scale - OFFSET,
               width * scale,
               height * scale,
             );
@@ -129,7 +135,7 @@
             context.fillText(
               text[i],
               positionX + x * scale,
-              screenHeight - y * scale,
+              screenHeight - y * scale - OFFSET,
             );
           }
 
