@@ -22,7 +22,7 @@
       }
 
       #text {
-        font-size: 32px;
+        font-size: 40px;
       }
 
       #props {
@@ -110,12 +110,11 @@
         context.font = `${fontSize}px Inter`;
 
         // Used to offset text a bit higher. Shouldn't be necessary.
-        const OFFSET = 10;
+        const OFFSET = 30;
 
         let positionX = 0;
         for (let i = 0; i < shapes.length; i++) {
           const { x, y, width, height, lsb, rsb } = shapes[i];
-          console.log(text[i], shapes[i]);
           document.getElementById(
             'props',
           ).innerHTML += `{ letter: '${text[i]}', x: ${x}, y: ${y}, width: ${width}, height: ${height}, lsb: ${lsb}, rsb: ${rsb} },<br>`;

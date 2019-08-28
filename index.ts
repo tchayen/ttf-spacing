@@ -45,14 +45,6 @@ const saveFile = (fileName: string, data: string) =>
     .map(index => ({ index, glyf: ttf.glyf[index] }))
     .map(({ glyf, index }) => {
       const hmtx = ttf.hmtx.hMetrics[index];
-      console.log(
-        glyf.xMin,
-        glyf.xMax,
-        glyf.yMin,
-        glyf.yMax,
-        hmtx.advanceWidth,
-        hmtx.leftSideBearing,
-      );
       return {
         x: glyf.xMin,
         y: glyf.yMin,
@@ -62,6 +54,5 @@ const saveFile = (fileName: string, data: string) =>
         rsb: hmtx.advanceWidth - hmtx.leftSideBearing - (glyf.xMax - glyf.xMin),
       };
     });
-
   console.log(data);
 })();
