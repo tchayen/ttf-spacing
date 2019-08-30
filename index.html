@@ -3,8 +3,10 @@
     <title>Test</title>
     <style>
       @import url('https://rsms.me/inter/inter.css');
+
       html {
         font-family: 'Inter', sans-serif;
+        font-size: 15px;
       }
 
       body {
@@ -17,8 +19,12 @@
       canvas {
         width: 100vw;
         height: 100vh;
-        background-color: rgb(220, 220, 220);
-        margin: 20px 0;
+      }
+
+      #description {
+        width: 720px;
+        margin-bottom: 20px;
+        line-height: 1.4em;
       }
 
       #text {
@@ -36,6 +42,12 @@
     </style>
   </head>
   <body>
+    <span id="description"
+      >In order: regular HTML text, canvas text where letter are separately
+      spaced on calculated spots (the point of this example) and canvas text.
+      The point of this example is for #2 to match perfectly #3 and having match
+      with #1 is nice to have.</span
+    >
     <span id="text"></span>
     <script>
       const shapes = [
@@ -81,8 +93,8 @@
         return fontSize;
       };
 
-      const screenWidth = 1100;
-      const screenHeight = 80;
+      const screenWidth = 720;
+      const screenHeight = 120;
       const canvas = document.createElement('canvas');
       canvas.setAttribute(
         'style',
@@ -109,8 +121,11 @@
         const scale = (1 / unitsPerEm) * fontSize;
         context.font = `${fontSize}px Inter`;
 
+        context.fillStyle = 'rgba(0, 0, 0)';
+        context.fillText(text, 0, 90);
+
         // Used to offset text a bit higher. Shouldn't be necessary.
-        const OFFSET = 30;
+        const OFFSET = 80;
 
         let positionX = 0;
         for (let i = 0; i < shapes.length; i++) {
@@ -121,9 +136,9 @@
 
           if (text[i] !== ' ') {
             context.beginPath();
-            context.fillStyle = 'rgb(255, 0, 255)';
+            context.fillStyle = 'rgba(0, 0, 0, 0.2)';
             context.rect(
-              positionX + (x + lsb) * scale,
+              positionX + (x + (i !== 0 ? lsb : 0)) * scale,
               screenHeight - (y + height) * scale - OFFSET,
               width * scale,
               height * scale,
@@ -133,12 +148,12 @@
             context.fillStyle = 'rgba(0, 0, 0)';
             context.fillText(
               text[i],
-              positionX + x * scale,
+              positionX + (i !== 0 ? x : 0) * scale,
               screenHeight - OFFSET,
             );
           }
 
-          positionX += (lsb + width + rsb) * scale;
+          positionX += ((i !== 0 ? lsb : 0) + width + rsb) * scale;
         }
       }, 100);
     </script>
