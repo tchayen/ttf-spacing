@@ -1,22 +1,21 @@
-# ttf-boundaries
+# ttf-spacing
 
-`*.ttf` files parser. Returns json with decoded tables.
+`*.ttf` files parser. Returns json with decoded subset of TTF tables or mapping unicode char to its spacing information.
 
-And additionally contains `glyphIndexMap` object, which is dictionary mapping utf-8 char to `glyphIndex` which is used in other tables such as `loca` or `hmtx`.
+Useful for calculating spacing of letters for text rendering. See `index.html` for example.
+
+Parsed ttf file additionally contains `glyphIndexMap` object, which is dictionary mapping utf-8 char to `glyphIndex` which is used in other tables such as `loca` or `hmtx`.
 
 ## Usage
 
-```js
-import ttfBoundaries from 'ttf-boundaries';
-// ...
-const font = await ttfBoundaries('Inter-Regular.ttf');
+```bash
+yarn parse spacing Inter-Regular.ttf spacing.json
+yarn parse ttf Inter-Regular.ttf font.json
 ```
 
 ## Install
 
-```bash
-yarn add ttf-boundaries
-```
+Clone the repository. Sorry, no `npm` package for now.
 
 ## Docs
 
@@ -33,3 +32,22 @@ Library handles following tables:
 - glyf
 
 For exact types, consult `types.ts`.
+
+Shape of glyph spacing information is as follows:
+
+```ts
+export type Glyph = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  lsb: number;
+  rsb: number;
+};
+```
+
+Where `lsb` is left side bearing, as found in `hmtx` table, while `rsb` is right side bearing, calculated with following formula:
+
+```js
+const rsb = hmtx.advanceWidth - hmtx.leftSideBearing - (glyf.xMax - glyf.xMin);
+```

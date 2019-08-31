@@ -8,6 +8,6 @@
     "typescript": "^3.5.3"
   },
   "scripts": {
-    "start": "ts-node index.ts"
+    "parse": "ts-node index.ts"
   }
 }
