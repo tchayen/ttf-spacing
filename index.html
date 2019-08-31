@@ -45,9 +45,9 @@
   </head>
   <body>
     <span id="description"
-      >In order: regular HTML text, canvas text where letter are separately
-      spaced on calculated spots (the point of this example) and canvas text.
-      The point of this example is for #2 to match perfectly #3 and having match
+      >In order: regular HTML text, canvas text and canvas text where letter are
+      separately spaced on calculated spots (the point of this example). The
+      point of this example is for #3 to match perfectly #2 and having match
       with #1 is nice to have.</span
     >
     <span id="text"></span>
@@ -124,10 +124,10 @@
         context.font = `${fontSize}px Inter`;
 
         context.fillStyle = 'rgba(0, 0, 0)';
-        context.fillText(text, 0, 90);
+        context.fillText(text, 0, 80);
 
         // Used to offset text a bit higher. Shouldn't be necessary.
-        const OFFSET = 80;
+        const OFFSET = 30 * window.devicePixelRatio;
 
         let positionX = 0;
         for (let i = 0; i < shapes.length; i++) {
@@ -141,7 +141,9 @@
             context.fillStyle = 'rgba(0, 0, 0, 0.2)';
             context.rect(
               positionX + (x + (i !== 0 ? lsb : 0)) * scale,
-              screenHeight - (y + height) * scale - OFFSET,
+              screenHeight * window.devicePixelRatio -
+                (y + height) * scale -
+                OFFSET,
               width * scale,
               height * scale,
             );
@@ -151,7 +153,7 @@
             context.fillText(
               text[i],
               positionX + (i !== 0 ? x : 0) * scale,
-              screenHeight - OFFSET,
+              screenHeight * window.devicePixelRatio - OFFSET,
             );
           }
 
