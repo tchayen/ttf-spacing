@@ -91,23 +91,25 @@
       const getFontSize = () => {
         const textElement = getComputedStyle(document.getElementById('text'));
         const fontSizeWithPx = textElement.fontSize;
-        const fontSize = fontSizeWithPx.slice(0, -2) * window.devicePixelRatio;
+        const fontSize = fontSizeWithPx.slice(0, -2);
         return fontSize;
       };
 
       const screenWidth = 720;
       const screenHeight = 120;
+      const pixelRatio = window.devicePixelRatio;
       const canvas = document.createElement('canvas');
       canvas.setAttribute(
         'style',
         `width: ${screenWidth}px; height: ${screenHeight}px`,
       );
-      canvas.width = screenWidth * window.devicePixelRatio;
-      canvas.height = screenHeight * window.devicePixelRatio;
+      canvas.width = screenWidth * pixelRatio;
+      canvas.height = screenHeight * pixelRatio;
       document.body.appendChild(canvas);
 
       setTimeout(() => {
         const context = canvas.getContext('2d');
+        context.scale(pixelRatio, pixelRatio);
         const fontSize = getFontSize();
         const unitsPerEm = 2816;
 
@@ -124,10 +126,11 @@
         context.font = `${fontSize}px Inter`;
 
         context.fillStyle = 'rgba(0, 0, 0)';
-        context.fillText(text, 0, 80);
+        context.fillText(text, 0, 40);
 
-        // Used to offset text a bit higher. Shouldn't be necessary.
-        const OFFSET = 30 * window.devicePixelRatio;
+        // Used to offset text from bottom edge of the canvas. Assumed to be
+        // higher than text.
+        const OFFSET = 30;
 
         let positionX = 0;
         for (let i = 0; i < shapes.length; i++) {
@@ -141,9 +144,7 @@
             context.fillStyle = 'rgba(0, 0, 0, 0.2)';
             context.rect(
               positionX + (x + (i !== 0 ? lsb : 0)) * scale,
-              screenHeight * window.devicePixelRatio -
-                (y + height) * scale -
-                OFFSET,
+              screenHeight - (y + height) * scale - OFFSET,
               width * scale,
               height * scale,
             );
@@ -153,7 +154,7 @@
             context.fillText(
               text[i],
               positionX + (i !== 0 ? x : 0) * scale,
-              screenHeight * window.devicePixelRatio - OFFSET,
+              screenHeight - OFFSET,
             );
           }
 
