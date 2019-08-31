@@ -1,6 +1,7 @@
 import fs from 'fs';
-import fontFileReader from './fontFileReader';
-import ttfReader from './ttfReader';
+import ttf from './ttf';
+import binaryFile from './binaryFile';
+import { Ttf, Dictionary, Glyph } from './types';
 
 const readFile = (fileName: string): Promise<Buffer> =>
   new Promise((resolve, reject) => {
@@ -29,30 +30,44 @@ const saveFile = (fileName: string, data: string) =>
     });
   });
 
-(async () => {
-  const buffer = await readFile('./Inter-Regular.ttf');
-  const reader = fontFileReader(buffer);
-  const ttf = ttfReader(reader);
-
-  await saveFile('./Inter-Regular.json', JSON.stringify(ttf));
-
+const generateSpacing = (ttfFile: Ttf) => {
+  const alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const charToGlyphIndex = (char: string) =>
-    ttf.glyphIndexMap[char.codePointAt(0) || 0] || 0;
+    ttfFile.glyphIndexMap[char.codePointAt(0) || 0] || 0;
 
-  const data = 'hrumpy wizards make toxic brew'
-    .split('')
-    .map(charToGlyphIndex)
-    .map(index => ({ index, glyf: ttf.glyf[index] }))
-    .map(({ glyf, index }) => {
-      const hmtx = ttf.hmtx.hMetrics[index];
-      return {
-        x: glyf.xMin,
-        y: glyf.yMin,
-        width: glyf.xMax - glyf.xMin,
-        height: glyf.yMax - glyf.yMin,
-        lsb: hmtx.leftSideBearing,
-        rsb: hmtx.advanceWidth - hmtx.leftSideBearing - (glyf.xMax - glyf.xMin),
-      };
-    });
-  console.log(data);
+  const map: Dictionary<Glyph> = {};
+  alphabet.split('').forEach(char => {
+    const index = ttfFile.glyphIndexMap[char.codePointAt(0) || 0] || 0;
+    const glyf = ttfFile.glyf[index];
+    const hmtx = ttfFile.hmtx.hMetrics[index];
+
+    map[char] = {
+      x: glyf.xMin,
+      y: glyf.yMin,
+      width: glyf.xMax - glyf.xMin,
+      height: glyf.yMax - glyf.yMin,
+      lsb: hmtx.leftSideBearing,
+      rsb: hmtx.advanceWidth - hmtx.leftSideBearing - (glyf.xMax - glyf.xMin),
+    };
+  });
+  return map;
+};
+
+(async () => {
+  const [_node, _file, type, input, output] = process.argv;
+
+  if (input === '' || output === '') {
+    throw new Error('You must provide input and output file');
+  }
+
+  const buffer = await readFile(input);
+  const reader = binaryFile(buffer);
+  const ttfFile = ttf(reader);
+
+  if (type === 'ttf') {
+    await saveFile(output, JSON.stringify(ttfFile));
+  } else if (type === 'spacing') {
+    const spacingFile = generateSpacing(ttfFile);
+    await saveFile(output, JSON.stringify(spacingFile));
+  }
 })();

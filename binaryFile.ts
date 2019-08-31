@@ -12,7 +12,7 @@ import {
   Offset32,
 } from './types';
 
-export type FontFileReader = {
+export type BinaryFile = {
   getUint8: () => Uint8;
   getUint16: () => Uint16;
   getUint32: () => Uint32;
@@ -30,7 +30,7 @@ export type FontFileReader = {
   setPosition: (targetPosition: number) => void;
 };
 
-const fontFileReader = (buffer: Buffer): FontFileReader => {
+const binaryFile = (buffer: Buffer): BinaryFile => {
   const data: Uint8Array = new Uint8Array(buffer);
   let position = 0;
 
@@ -95,4 +95,4 @@ const fontFileReader = (buffer: Buffer): FontFileReader => {
   };
 };
 
-export default fontFileReader;
+export default binaryFile;
